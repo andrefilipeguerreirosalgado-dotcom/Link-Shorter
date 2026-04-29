@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Encurtador de Links</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 700px;
+      margin: 60px auto;
+      padding: 20px;
+      background: #f7f7f7;
+    }
+    .card {
+      background: white;
+      padding: 24px;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+    input, button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+    button {
+      cursor: pointer;
+    }
+    a {
+      word-break: break-all;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Encurtador de Links</h1>
+    <input id="url" type="text" placeholder="Cola o link aqui" />
+    <button onclick="encurtar()">Encurtar</button>
+    <p id="resultado"></p>
+  </div>
+
+  <script>
+    async function encurtar() {
+      const url = document.getElementById("url").value.trim();
+      const resultado = document.getElementById("resultado");
+
+      resultado.textContent = "A guardar...";
+
+      const res = await fetch("/encurtar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        resultado.textContent = data.error || "Erro";
+        return;
+      }
+
+      resultado.innerHTML = `Link curto: <a href="${data.short}" target="_blank">${data.short}</a>`;
+    }
+  </script>
+</body>
+</html>
