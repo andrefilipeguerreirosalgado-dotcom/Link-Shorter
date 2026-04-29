@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Encurtador de Links</title>
+  <title>Linkme now | Link shorter</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -35,9 +35,9 @@
 </head>
 <body>
   <div class="card">
-    <h1>Encurtador de Links</h1>
-    <input id="url" type="text" placeholder="Cola o link aqui" />
-    <button onclick="encurtar()">Encurtar</button>
+    <h1>Link shorter</h1>
+    <input id="url" type="text" placeholder="Past the link here" />
+    <button onclick="encurtar()">Short it</button>
     <p id="resultado"></p>
   </div>
 
@@ -46,7 +46,7 @@
       const url = document.getElementById("url").value.trim();
       const resultado = document.getElementById("resultado");
 
-      resultado.textContent = "A guardar...";
+      resultado.textContent = "Waiting...";
 
       const res = await fetch("/encurtar", {
         method: "POST",
