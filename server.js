@@ -52,7 +52,7 @@ app.post("/encurtar", async (req, res) => {
   const longUrl = normalizarUrl(req.body?.url);
 
   if (!longUrl) {
-    return res.status(400).json({ error: "URL inválido" });
+    return res.status(400).json({ error: "Invalid URL" });
   }
 
   for (let tentativas = 0; tentativas < 8; tentativas++) {
@@ -72,11 +72,11 @@ app.post("/encurtar", async (req, res) => {
 
     if (error.code !== "23505") {
       console.error("Erro ao inserir:", error);
-      return res.status(500).json({ error: "Erro ao guardar o link" });
+      return res.status(500).json({ error: "Erro to storage link" });
     }
   }
 
-  return res.status(500).json({ error: "Não foi possível gerar um código único" });
+  return res.status(500).json({ error: "Erro 500" });
 });
 
 app.get("/", (req, res) => {
@@ -93,7 +93,7 @@ app.get("/:code", async (req, res) => {
     .single();
 
   if (error || !data) {
-    return res.status(404).send("Link não encontrado");
+    return res.status(404).send("Link not found");
   }
 
   await supabase
