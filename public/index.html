@@ -1,67 +1,169 @@
 <!DOCTYPE html>
-<html lang="pt">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Encurtador de Links</title>
+  <title>Link Me Now</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      max-width: 700px;
-      margin: 60px auto;
+      max-width: 760px;
+      margin: 50px auto;
       padding: 20px;
-      background: #f7f7f7;
+      background: #f6f7fb;
+      color: #111;
     }
     .card {
-      background: white;
+      background: #fff;
+      border-radius: 18px;
       padding: 24px;
-      border-radius: 16px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+    }
+    h1 {
+      margin-top: 0;
     }
     input, button {
       width: 100%;
-      padding: 12px;
+      padding: 12px 14px;
       margin-top: 10px;
       font-size: 16px;
       box-sizing: border-box;
+      border-radius: 12px;
+      border: 1px solid #d9dbe7;
     }
     button {
       cursor: pointer;
+      background: #111827;
+      color: white;
+      border: none;
+      font-weight: 700;
+    }
+    button:hover {
+      opacity: 0.92;
     }
     a {
       word-break: break-all;
+    }
+    .section {
+      margin-top: 24px;
+    }
+    .link-item {
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+      padding: 14px;
+      margin-top: 10px;
+    }
+    .small {
+      font-size: 14px;
+      color: #555;
+    }
+    .danger {
+      background: #dc2626;
+      margin-top: 10px;
     }
   </style>
 </head>
 <body>
   <div class="card">
-    <h1>Encurtador de Links</h1>
-    <input id="url" type="text" placeholder="Cola o link aqui" />
-    <button onclick="encurtar()">Encurtar</button>
-    <p id="resultado"></p>
+    <h1>Link Me Now</h1>
+    <p class="small">Create short links, use custom codes, and manage your own links.</p>
+
+    <input id="url" type="text" placeholder="Enter a long URL" />
+    <input id="code" type="text" placeholder="Custom code (optional)" />
+    <button onclick="shorten()">Shorten Link</button>
+
+    <p id="result"></p>
+
+    <div class="section">
+      <button onclick="loadMyLinks()">Load My Links</button>
+      <div id="myLinks"></div>
+    </div>
   </div>
 
   <script>
-    async function encurtar() {
+    function getUserId() {
+      let id = localStorage.getItem("user_id");
+      if (!id) {
+        id = crypto.randomUUID();
+        localStorage.setItem("user_id", id);
+      }
+      return id;
+    }
+
+    async function shorten() {
       const url = document.getElementById("url").value.trim();
-      const resultado = document.getElementById("resultado");
+      const code = document.getElementById("code").value.trim();
+      const result = document.getElementById("result");
 
-      resultado.textContent = "A guardar...";
+      result.textContent = "Saving...";
 
-      const res = await fetch("/encurtar", {
+      const response = await fetch("/shorten", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url })
+        body: JSON.stringify({
+          url,
+          code,
+          user_id: getUserId()
+        })
       });
 
-      const data = await res.json();
+      const data = await response.json();
 
-      if (!res.ok) {
-        resultado.textContent = data.error || "Erro";
+      if (!response.ok) {
+        result.textContent = data.error || "Something went wrong.";
         return;
       }
 
-      resultado.innerHTML = `Short link: <a href="${data.short}" target="_blank">${data.short}</a>`;
+      result.innerHTML = `Short link: <a href="${data.short}" target="_blank">${data.short}</a>`;
+      loadMyLinks();
+    }
+
+    async function loadMyLinks() {
+      const box = document.getElementById("myLinks");
+      box.innerHTML = "Loading...";
+
+      const response = await fetch(`/my-links?user_id=${encodeURIComponent(getUserId())}`);
+      const data = await response.json();
+
+      if (!response.ok) {
+        box.textContent = data.error || "Could not load links.";
+        return;
+      }
+
+      if (!data.length) {
+        box.innerHTML = "<p class='small'>You have no saved links yet.</p>";
+        return;
+      }
+
+      box.innerHTML = data.map(item => `
+        <div class="link-item">
+          <div><strong>${item.code}</strong></div>
+          <div class="small">${item.long_url}</div>
+          <div class="small">Clicks: ${item.clicks ?? 0}</div>
+          <div style="margin-top:8px;">
+            <a href="/${item.code}" target="_blank">Open</a>
+            <button class="danger" onclick="deleteLink('${item.code}')">Delete</button>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    async function deleteLink(code) {
+      const response = await fetch(`/delete/${encodeURIComponent(code)}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: getUserId() })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.error || "Delete failed.");
+        return;
+      }
+
+      loadMyLinks();
     }
   </script>
 </body>
